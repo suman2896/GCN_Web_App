@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plant Disease Prediction</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Custom CSS -->
+    <style>
+      body {
+        background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+      .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+      .card-header {
+        background: #4caf50;
+        color: white;
+        text-align: center;
+        padding: 20px;
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+      .card-body {
+        padding: 30px;
+      }
+      .upload-box {
+        border: 2px dashed #4caf50;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+      .upload-box:hover {
+        background: rgba(76, 175, 80, 0.1);
+      }
+      .upload-box p {
+        margin: 0;
+        color: #4caf50;
+        font-size: 1.1rem;
+      }
+      #image-preview {
+        margin-top: 20px;
+        max-width: 100%;
+        border-radius: 10px;
+        display: none;
+      }
+      #result {
+        margin-top: 20px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+      }
+      .details {
+        margin-top: 20px;
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+      }
+      .details h3 {
+        margin-bottom: 15px;
+        color: #4caf50;
+        font-size: 1.3rem;
+      }
+      .details p {
+        margin: 0;
+        color: #555;
+      }
+      .btn-primary {
+        background: #4caf50;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1rem;
+        transition: background 0.3s ease;
+      }
+      .btn-primary:hover {
+        background: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="card-header">Plant Disease Prediction</div>
+      <div class="card-body">
+        <div
+          class="upload-box"
+          onclick="document.getElementById('file-input').click()"
+        >
+          <p>Click to upload an image</p>
+          <input
+            type="file"
+            id="file-input"
+            accept="image/*"
+            style="display: none"
+          />
+        </div>
+        <img id="image-preview" src="#" alt="Image Preview" class="img-fluid" />
+        <div id="result" class="text-center"></div>
+        <div class="details" id="details" style="display: none">
+          <h3>Details:</h3>
+          <p><strong>Symptoms:</strong> <span id="symptoms"></span></p>
+          <p><strong>Treatment:</strong> <span id="treatment"></span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+    <script>
+      const fileInput = document.getElementById("file-input");
+      const imagePreview = document.getElementById("image-preview");
+      const resultDiv = document.getElementById("result");
+      const detailsDiv = document.getElementById("details");
+      const symptomsSpan = document.getElementById("symptoms");
+      const treatmentSpan = document.getElementById("treatment");
+
+      fileInput.addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Display the uploaded image
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          imagePreview.src = e.target.result;
+          imagePreview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const response = await fetch("http://127.0.0.1:5000/predict", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+
+          if (data.error) {
+            resultDiv.textContent = `Error: ${data.error}`;
+            detailsDiv.style.display = "none";
+          } else {
+            resultDiv.textContent = `Prediction: ${data.prediction} (Confidence: ${data.confidence}%)`;
+            symptomsSpan.textContent = data.symptoms;
+            treatmentSpan.textContent = data.treatment;
+            detailsDiv.style.display = "block";
+          }
+        } catch (error) {
+          resultDiv.textContent = "An error occurred. Please try again.";
+          detailsDiv.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>
